@@ -5,19 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Segredo do Pau de Cavalo</title>
 
-  <!-- Facebook Pixel -->
+  <!-- Meta Pixel Code -->
+  <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init', '1013966997836020');fbq('track', 'PageView');</script>
+  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1013966997836020&ev=PageView&noscript=1"/></noscript>
+  <!-- End Meta Pixel Code -->
+
+  <!-- Meta Conversions API -->
   <script>
-    !function(f,b,e,v,n,t,s){
-      if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
-    fbq('init', '954660397172367');
-    fbq('track', 'PageView');
+    var META_PIXEL_ID = '1013966997836020';
+    var META_ACCESS_TOKEN = 'EAAYZALaUyBNoBRqDyOxgjzqkVpcWUTXaLZAKDCEKFd43tHNR9mQ08ktZCUy3pEf4kPZAbfRiRMpPwj1xGXM7CCwKGhg7cOIN5ZBlEdvx2OENxgiYIM0MZB4RJpZCZCU6tjNd9kwBCAwHLpyw9RNgEbApt2itWaZBJyAHdsTjgpVRBgGPWBd2jMCeofc7NtZCfxswZDZD';
+
+    function generateEventId() {
+      return 'ev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function getClientUserData() {
+      return {
+        client_ip_address: null,
+        client_user_agent: navigator.userAgent,
+        fbc: getCookie('_fbc') || null,
+        fbp: getCookie('_fbp') || null
+      };
+    }
+
+    function getCookie(name) {
+      var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+      return v ? v[2] : null;
+    }
+
+    function sendConversionsAPI(eventName, customData) {
+      var eventId = generateEventId();
+      var userData = getClientUserData();
+      var payload = {
+        data: [{
+          event_name: eventName,
+          event_time: Math.floor(Date.now() / 1000),
+          event_id: eventId,
+          event_source_url: window.location.href,
+          action_source: 'website',
+          user_data: userData,
+          custom_data: customData || {}
+        }]
+      };
+
+      fetch('https://graph.facebook.com/v19.0/' + META_PIXEL_ID + '/events?access_token=' + META_ACCESS_TOKEN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(function(err) { console.warn('Conversions API error:', err); });
+
+      return eventId;
+    }
+
+    // Disparo duplo: Pixel + API de Conversão
+    function trackEvent(eventName, customData) {
+      var eventId = sendConversionsAPI(eventName, customData);
+      if (typeof fbq !== 'undefined') {
+        fbq('track', eventName, customData || {}, { eventID: eventId });
+      }
+    }
   </script>
-  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=954660397172367&ev=PageView&noscript=1"/></noscript>
+  <!-- End Meta Conversions API -->
 
   <script>
     !function (w, p) {
@@ -125,10 +173,10 @@
 
 <!-- PLAYER SEM SOBREPOSIÇÃO -->
 <div class="video-wrap">
-  <vturb-smartplayer id="vid-6a1a887edbdb1fd29665f1b9" style="display: block; margin: 0 auto; width: 100%; max-width: 400px;"></vturb-smartplayer>
+  <vturb-smartplayer id="vid-6a1f1ae7aaf6fd71cb30a113" style="display: block; margin: 0 auto; width: 100%; max-width: 400px;"></vturb-smartplayer>
   <script type="text/javascript">
     var s=document.createElement("script");
-    s.src="https://scripts.converteai.net/b23f4d5c-39f5-44e0-874c-87e4f650b788/players/6a1a887edbdb1fd29665f1b9/v4/player.js";
+    s.src="https://scripts.converteai.net/23ce7158-72f8-4a21-b1b0-9345a42d88b8/players/6a1f1ae7aaf6fd71cb30a113/v4/player.js";
     s.async=!0;
     document.head.appendChild(s);
   </script>
@@ -232,17 +280,19 @@
 </div>
 
 <script>
-  fbq('track', 'ViewContent');
+  // PageView já disparado pelo Pixel no <head>
+  // Disparo duplo via Conversions API
+  sendConversionsAPI('PageView');
 
   let tracked = {vc:false, atc:false, ic:false};
   window.addEventListener("scroll", () => {
     const pos = window.scrollY / document.body.scrollHeight;
-    if (!tracked.vc && pos > 0.25) { fbq('track', 'ViewContent'); tracked.vc = true; }
-    if (!tracked.atc && pos > 0.45) { fbq('track', 'AddToCart'); tracked.atc = true; }
-    if (!tracked.ic && pos > 0.70) { fbq('track', 'InitiateCheckout'); tracked.ic = true; }
+    if (!tracked.vc && pos > 0.25) { trackEvent('ViewContent'); tracked.vc = true; }
+    if (!tracked.atc && pos > 0.45) { trackEvent('AddToCart'); tracked.atc = true; }
+    if (!tracked.ic && pos > 0.70) { trackEvent('InitiateCheckout'); tracked.ic = true; }
   });
 
-  setTimeout(() => fbq('track', 'Lead'), 45000);
+  setTimeout(() => trackEvent('Lead'), 45000);
 
   // Timer regressivo
   (function(){
